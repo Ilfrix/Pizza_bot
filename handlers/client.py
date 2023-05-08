@@ -1,9 +1,10 @@
 from aiogram import types, Dispatcher
 from create_bot import dp, bot
+from keyboards import kb_client
 
 # @dp.message_handler(commands=['start'])
 async def start_work(message : types.Message):
-    await bot.send_message(message.from_user.id, 'Добро пожаловать! Я бот для пиццерии!')
+    await bot.send_message(message.from_user.id, 'Добро пожаловать! Я бот для пиццерии!', reply_markup=kb_client)
 
 # @dp.message_handler(commands=['Режим_работы'])
 async def pizza_time(message : types.Message):
