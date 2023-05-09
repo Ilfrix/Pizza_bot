@@ -6,6 +6,7 @@ from aiogram.dispatcher.filters import Text
 from secret_values import admin_id
 from data_base import sqlite_db
 from keyboards import admin_kb
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 ID = None
 
@@ -66,6 +67,7 @@ async def load_pizza_price(message : types.Message, state: FSMContext):
     await sqlite_db.sql_add_command(state)
 
     await state.finish()
+    await bot.send_message(message.from_user.id, 'Успешно! Продолжим?', reply_markup=admin_kb.button_case_admin)
 
 # @dp.message_handler(state='*', commands='отмена')
 # @dp.message_handler(Text(equals='отмена', ignore_case=True), state='*')
@@ -75,6 +77,23 @@ async def cancel_handler(message : types.Message, state : FSMContext):
         return
     await state.finish()
     await message.reply('OK')
+
+# @dp.message_handler(Text(equals='отмена', ignore_case=True))
+async def cancel_text_handler(message : types.Message):
+    await message.reply('OK')
+
+# @dp.message_handler(commands=['Удалить'])
+async def delete_pizza(message : types.Message):
+    read = await sqlite_db.sql_read2()
+    for ret in read:
+        await bot.send_photo(message.from_user.id, ret[0], f'{ret[1]}\nОписание: {ret[2]}\nЦена: {ret[-1]}')
+        await bot.send_message(message.from_user.id, text='^^^', reply_markup=InlineKeyboardMarkup().\
+                               add(InlineKeyboardButton(f'Удалить {ret[1]}', callback_data=f'del {ret[1]}')))
+
+# @dp.callback_query_handler(lambda x: x.data and x.data.startswith('del '))
+async def del_callback_pizza(callback_query: types.CallbackQuery):
+    await sqlite_db.sql_delete_pizza(callback_query.data.replace('del', ''))
+    await callback_query.answer(text=f'{callback_query.data.replace("del", "")} удалена.', show_alert=True)
 
 # Регистрация хендлеров
 def register_handlers_admin(dp : Dispatcher):
@@ -86,3 +105,6 @@ def register_handlers_admin(dp : Dispatcher):
     dp.register_message_handler(cancel_handler, state='*', commands=['отмена'])
     dp.register_message_handler(cancel_handler, Text(equals='отмена', ignore_case=True), state='*')
     dp.register_message_handler(check_admin, commands=['модератор'])
+    dp.register_message_handler(cancel_text_handler, Text(equals='отмена', ignore_case=True))
+    dp.register_message_handler(delete_pizza, commands=['Удалить'])
+    dp.register_callback_query_handler(del_callback_pizza, lambda x: x.data and x.data.startswith('del '))
