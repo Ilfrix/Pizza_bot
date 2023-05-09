@@ -4,6 +4,8 @@ from aiogram import types, Dispatcher
 from create_bot import dp, bot
 from aiogram.dispatcher.filters import Text
 from secret_values import admin_id
+from data_base import sqlite_db
+from keyboards import admin_kb
 
 ID = None
 
@@ -17,10 +19,9 @@ class FSMAdmin(StatesGroup):
 async def check_admin(message : types.Message):
     global ID
     ID = message.from_user.id
-    print(ID, admin_id)
     if ID in admin_id:
-        await bot.send_message(message.from_user.id, 'Что надо, хозяин?') #, reply_markup=button_case_admin)
-        print(f'Пользователь {message.from_user.full_name} вошал как Администратор')
+        await bot.send_message(message.from_user.id, 'Что надо, хозяин?', reply_markup=admin_kb.button_case_admin)
+        print(f'Пользователь {message.from_user.full_name} вошел как Администратор')
     else:
         await bot.send_message(message.from_user.id, 'Ошибка прав доступа')
 # Начало диалога загрузки новго пункта меню
@@ -62,8 +63,7 @@ async def load_pizza_price(message : types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['price'] = float(message.text)
 
-    async with state.proxy() as data:
-        await message.reply(str(data))
+    await sqlite_db.sql_add_command(state)
 
     await state.finish()
 
