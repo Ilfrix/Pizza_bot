@@ -4,6 +4,7 @@ from keyboards import kb_client
 
 # @dp.message_handler(commands=['start'])
 async def start_work(message : types.Message):
+    print(f"Пользователь {message.from_user.full_name} с id {message.from_user.id}")
     await bot.send_message(message.from_user.id, 'Добро пожаловать! Я бот для пиццерии!', reply_markup=kb_client)
 
 # @dp.message_handler(commands=['Режим_работы'])
